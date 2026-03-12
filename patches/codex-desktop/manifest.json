@@ -47,6 +47,14 @@
       "already_contains": "if(n.isFile()){let e=(0,r.dirname)(t),n=await(0,u.stat)(e);if(n.isDirectory())return(0,r.resolve)(e)}"
     },
     {
+      "name": "open-file-linux-fallback-file-manager",
+      "glob": ".vite/build/main-*.js",
+      "find": "if(p=Li({target:p,hasExplicitTarget:f,platform:process.platform}),!p)throw Error(`No available open target`);",
+      "replace": "if(p=Li({target:p,hasExplicitTarget:f,platform:process.platform}),!p){if(process.platform===`linux`)p=`fileManager`;else throw Error(`No available open target`)}",
+      "count": 1,
+      "already_contains": "if(p=Li({target:p,hasExplicitTarget:f,platform:process.platform}),!p){if(process.platform===`linux`)p=`fileManager`;else throw Error(`No available open target`)}"
+    },
+    {
       "name": "skills-clone-without-sparse",
       "glob": ".vite/build/deeplinks-*.js",
       "find": "[`clone`,`--depth`,`1`,`--filter=blob:none`,`--sparse`,Ek,e]",
