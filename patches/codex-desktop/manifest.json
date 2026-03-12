@@ -1,0 +1,58 @@
+{
+  "copy_tree": [
+    {
+      "from": "files",
+      "to": "."
+    }
+  ],
+  "replacements": [
+    {
+      "name": "inject-font-import-and-sans-stack",
+      "glob": "webview/assets/*.css",
+      "find": "@layer theme{:root,:host{--font-sans:var(--vscode-font-family,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif);",
+      "replace": "@import \"./codex-fonts.css\";@layer theme{:root,:host{--font-sans:var(--vscode-font-family,\"Codex Sans\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif);",
+      "count": 1,
+      "already_contains": "@import \"./codex-fonts.css\";"
+    },
+    {
+      "name": "use-bundled-mono-stack",
+      "glob": "webview/assets/*.css",
+      "find": "--font-mono:var(--vscode-editor-font-family,var(--font-mono-default));",
+      "replace": "--font-mono:var(--vscode-editor-font-family,\"Codex Mono\",var(--font-mono-default));",
+      "count": 1,
+      "already_contains": "--font-mono:var(--vscode-editor-font-family,\"Codex Mono\",var(--font-mono-default));"
+    },
+    {
+      "name": "prefer-bundled-mono-default",
+      "glob": "webview/assets/*.css",
+      "find": "--font-mono-default:ui-monospace,\"SFMono-Regular\",\"SF Mono\",Menlo,Consolas,\"Liberation Mono\",monospace;",
+      "replace": "--font-mono-default:\"Codex Mono\",ui-monospace,\"SFMono-Regular\",\"SF Mono\",Menlo,Consolas,\"Liberation Mono\",monospace;",
+      "count": 1,
+      "already_contains": "--font-mono-default:\"Codex Mono\",ui-monospace"
+    },
+    {
+      "name": "linux-picker-allow-file-selection",
+      "glob": ".vite/build/main-*.js",
+      "find": "let e=[`openDirectory`,`createDirectory`];await this.shouldShowHiddenFilesInPicker()&&e.push(`showHiddenFiles`);let n=await t.dialog.showOpenDialog({properties:e,title:`Select Project Root`}),r=n.filePaths?.[0];",
+      "replace": "let e=process.platform===`linux`?[`openFile`,`openDirectory`,`createDirectory`]:[`openDirectory`,`createDirectory`];await this.shouldShowHiddenFilesInPicker()&&e.push(`showHiddenFiles`);let n=await t.dialog.showOpenDialog({properties:e,title:`Select Project Root`}),r=n.filePaths?.[0];",
+      "count": 2,
+      "already_contains": "process.platform===`linux`?[`openFile`,`openDirectory`,`createDirectory`]:[`openDirectory`,`createDirectory`]"
+    },
+    {
+      "name": "linux-picker-resolve-parent-directory",
+      "glob": ".vite/build/main-*.js",
+      "find": "async resolveWorkspaceRoot(e){try{let t=oi(e,this.host);return(await(0,u.stat)(t)).isDirectory()?(0,r.resolve)(t):null}catch(e){return Y().warning(`Failed to stat workspace root`,{safe:{},sensitive:{error:e}}),null}}",
+      "replace": "async resolveWorkspaceRoot(e){try{let t=oi(e,this.host),n=await(0,u.stat)(t);if(n.isDirectory())return(0,r.resolve)(t);if(n.isFile()){let e=(0,r.dirname)(t),n=await(0,u.stat)(e);if(n.isDirectory())return(0,r.resolve)(e)}return null}catch(e){return Y().warning(`Failed to stat workspace root`,{safe:{},sensitive:{error:e}}),null}}",
+      "count": 1,
+      "already_contains": "if(n.isFile()){let e=(0,r.dirname)(t),n=await(0,u.stat)(e);if(n.isDirectory())return(0,r.resolve)(e)}"
+    },
+    {
+      "name": "skills-clone-without-sparse",
+      "glob": ".vite/build/deeplinks-*.js",
+      "find": "[`clone`,`--depth`,`1`,`--filter=blob:none`,`--sparse`,Ek,e]",
+      "replace": "[`clone`,`--depth`,`1`,`--filter=blob:none`,Ek,e]",
+      "count": 1,
+      "already_contains": "[`clone`,`--depth`,`1`,`--filter=blob:none`,Ek,e]"
+    }
+  ]
+}

@@ -2,3 +2,5 @@
 node_modules/
 codex-app/
 dist/
+local/
+patch-work/
