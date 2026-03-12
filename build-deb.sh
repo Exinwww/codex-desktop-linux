@@ -23,6 +23,25 @@ error() {
     exit 1
 }
 
+detect_codex_app_version() {
+    local meta_dir package_json
+
+    meta_dir="$(mktemp -d "$STAGING_DIR/app-version.XXXXXX")"
+    package_json="$meta_dir/package.json"
+
+    if command -v npx >/dev/null 2>&1 && command -v node >/dev/null 2>&1; then
+        (
+            cd "$meta_dir"
+            npx --yes asar extract-file "$APP_DIR/resources/app.asar" package.json >/dev/null 2>&1
+        ) || return 1
+
+        node -p "require('$package_json').version" 2>/dev/null || return 1
+        return 0
+    fi
+
+    return 1
+}
+
 map_arch() {
     case "$1" in
         x86_64|amd64) echo "amd64" ;;
@@ -66,6 +85,7 @@ EOF
 [ -x "$APP_DIR/start.sh" ] || error "App launcher is missing or not executable: $APP_DIR/start.sh"
 [ -s "$APP_DIR/electron" ] || error "Electron binary not found: $APP_DIR/electron"
 [ -r "$APP_DIR/version" ] || error "App version file not found: $APP_DIR/version"
+[ -r "$APP_DIR/resources/app.asar" ] || error "App ASAR not found: $APP_DIR/resources/app.asar"
 command -v dpkg-deb >/dev/null 2>&1 || error "dpkg-deb is required"
 command -v install >/dev/null 2>&1 || error "install is required"
 
@@ -75,6 +95,10 @@ fi
 
 if [ -z "$ICON_SOURCE" ] || [ ! -r "$ICON_SOURCE" ]; then
     error "Could not find Codex icon PNG under $APP_DIR/content/webview/assets"
+fi
+
+if [ -z "${APP_VERSION:-}" ]; then
+    APP_VERSION="$(detect_codex_app_version || true)"
 fi
 
 APP_VERSION="${APP_VERSION:-$(tr -d '\n' < "$APP_DIR/version")}"

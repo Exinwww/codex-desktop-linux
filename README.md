@@ -24,7 +24,7 @@ sudo apt install -y nodejs npm
 Install the package, then let `apt` resolve any missing runtime libraries:
 
 ```bash
-sudo dpkg -i ./codex-desktop-linux_40.0.0-1_amd64.deb
+sudo dpkg -i ./codex-desktop-linux_<app-version>-1_amd64.deb
 sudo apt -f install -y
 ```
 
@@ -88,6 +88,11 @@ The installer prefers a recent `7-Zip` (`7zz`/`7z`, version 22+). If your distro
 ```bash
 sudo apt install nodejs npm python3 curl tar unzip build-essential
 sudo apt install gcc-12 g++-12
+```
+
+Optional fallback if you prefer Clang and your distro provides it:
+
+```bash
 sudo apt install clang-18 libc++-18-dev libc++abi-18-dev
 ```
 
@@ -202,9 +207,11 @@ It performs the full pipeline:
 2. runs `install.sh`
 3. reapplies the committed patch bundle from `patches/codex-desktop/`
 4. runs `build-deb.sh`
-5. publishes `dist/*.deb` to a GitHub Release tagged as `codex-desktop-linux-v<app-version>`
+5. publishes `dist/*.deb` to a GitHub Release tagged with the Codex app version and Ubuntu target, for example `codex-desktop-linux-v26.309.31024-ubuntu20.04`
 
 The workflow uses the repository `GITHUB_TOKEN` with `contents: write` so it can create or update the release for a given upstream app version.
+
+The daily scheduled run checks the Codex app version found inside the latest DMG and skips patching, packaging, and release publishing when a release for that exact app version on Ubuntu 20.04 already exists.
 
 ## Updating to a new Codex release
 

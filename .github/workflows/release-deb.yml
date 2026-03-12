@@ -60,7 +60,77 @@ jobs:
           chmod +x install.sh
           ./install.sh
 
+      - name: Collect Codex app metadata
+        run: |
+          meta_dir="$(mktemp -d)"
+          (
+            cd "$meta_dir"
+            npx --yes asar extract-file "$GITHUB_WORKSPACE/codex-app/resources/app.asar" package.json
+          )
+
+          CODEX_APP_VERSION="$(node -p "require('$meta_dir/package.json').version")"
+          CODEX_BUILD_NUMBER="$(node -p "require('$meta_dir/package.json').codexBuildNumber || ''")"
+          ELECTRON_VERSION="$(tr -d '\n' < codex-app/version)"
+          RELEASE_TAG="codex-desktop-linux-v${CODEX_APP_VERSION}-ubuntu20.04"
+          RELEASE_NAME="Codex Desktop Linux ${CODEX_APP_VERSION} for Ubuntu 20.04"
+
+          if [ -n "$CODEX_BUILD_NUMBER" ]; then
+            RELEASE_NAME="${RELEASE_NAME} (build ${CODEX_BUILD_NUMBER}, Electron ${ELECTRON_VERSION})"
+          else
+            RELEASE_NAME="${RELEASE_NAME} (Electron ${ELECTRON_VERSION})"
+          fi
+
+          {
+            echo "CODEX_APP_VERSION=$CODEX_APP_VERSION"
+            echo "CODEX_BUILD_NUMBER=$CODEX_BUILD_NUMBER"
+            echo "ELECTRON_VERSION=$ELECTRON_VERSION"
+            echo "RELEASE_TAG=$RELEASE_TAG"
+            echo "RELEASE_NAME=$RELEASE_NAME"
+          } >> "$GITHUB_ENV"
+
+      - name: Skip scheduled rebuild when release exists
+        id: release_check
+        if: github.event_name == 'schedule'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.error
+          import urllib.request
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          tag = os.environ["RELEASE_TAG"]
+          token = os.environ["GITHUB_TOKEN"]
+          output_path = os.environ["GITHUB_OUTPUT"]
+
+          request = urllib.request.Request(
+              f"https://api.github.com/repos/{repo}/releases/tags/{tag}",
+              headers={
+                  "Accept": "application/vnd.github+json",
+                  "Authorization": f"Bearer {token}",
+              },
+          )
+
+          try:
+              with urllib.request.urlopen(request) as response:
+                  payload = json.load(response)
+          except urllib.error.HTTPError as exc:
+              if exc.code == 404:
+                  print(f"No release found for {tag}; continuing build.")
+                  with open(output_path, "a", encoding="utf-8") as handle:
+                      handle.write("skip_build=false\n")
+                  raise SystemExit(0)
+              raise
+
+          print(f"Release already exists for {tag}: {payload.get('html_url', 'unknown url')}")
+          with open(output_path, "a", encoding="utf-8") as handle:
+              handle.write("skip_build=true\n")
+          PY
+
       - name: Apply committed patch bundle
+        if: github.event_name != 'schedule' || steps.release_check.outputs.skip_build != 'true'
         run: |
           python3 - <<'PY'
           import json
@@ -149,26 +219,29 @@ jobs:
           PY
 
       - name: Build Debian package
+        if: github.event_name != 'schedule' || steps.release_check.outputs.skip_build != 'true'
         run: |
           chmod +x build-deb.sh
           ./build-deb.sh
 
-      - name: Collect build metadata
+      - name: Collect Debian package metadata
+        if: github.event_name != 'schedule' || steps.release_check.outputs.skip_build != 'true'
         run: |
-          echo "APP_VERSION=$(tr -d '\n' < codex-app/version)" >> "$GITHUB_ENV"
           echo "DEB_PATH=$(find dist -maxdepth 1 -type f -name '*.deb' | head -n 1)" >> "$GITHUB_ENV"
 
       - name: Upload Debian artifact
+        if: github.event_name != 'schedule' || steps.release_check.outputs.skip_build != 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: codex-desktop-linux-${{ env.APP_VERSION }}-deb
+          name: codex-desktop-linux-${{ env.CODEX_APP_VERSION }}-ubuntu20.04-deb
           path: ${{ env.DEB_PATH }}
 
       - name: Publish GitHub release
+        if: github.event_name != 'schedule' || steps.release_check.outputs.skip_build != 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: codex-desktop-linux-v${{ env.APP_VERSION }}
-          name: Codex Desktop Linux v${{ env.APP_VERSION }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
           files: ${{ env.DEB_PATH }}
           generate_release_notes: true
           overwrite_files: true
