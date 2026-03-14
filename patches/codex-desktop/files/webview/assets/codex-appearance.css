@@ -42,3 +42,74 @@
   border-radius: var(--codex-dev-assistant-radius);
   padding: var(--codex-dev-assistant-padding-y) var(--codex-dev-assistant-padding-x);
 }
+
+#codex-thread-pins-inline {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  margin-left: 8px;
+  padding-left: 10px;
+  border-left: 1px solid var(--color-border-light);
+  overflow: hidden;
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
+}
+
+.codex-thread-pins-list {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.codex-thread-pins-list::-webkit-scrollbar {
+  display: none;
+}
+
+.codex-thread-pin-chip {
+  appearance: none;
+  min-width: 0;
+  max-width: 148px;
+  flex: 0 0 auto;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  background: var(--color-background-button-secondary);
+  color: var(--color-text-foreground-secondary);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.codex-thread-pin-chip:hover {
+  background: var(--color-background-button-secondary-hover);
+  color: var(--color-text-foreground);
+}
+
+.codex-thread-pin-chip.is-active {
+  border-color: color-mix(in srgb, var(--color-border-focus) 42%, transparent);
+  background: var(--color-background-accent);
+  color: var(--color-text-accent);
+}
+
+@media (max-width: 1320px) {
+  .codex-thread-pin-chip {
+    max-width: 124px;
+  }
+}
+
+@media (max-width: 1100px) {
+  #codex-thread-pins-inline {
+    display: none;
+  }
+}

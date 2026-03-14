@@ -16,6 +16,13 @@ import {
   r as readStoredMessageStyle,
   w as writeStoredMessageStyle,
 } from "./codex-appearance-shared.js";
+import {
+  THREAD_PINS_MODE_DEFAULT,
+  THREAD_PINS_MODE_HEADER,
+  THREAD_PINS_MODE_UPDATED_EVENT,
+  readStoredThreadPinsMode,
+  writeStoredThreadPinsMode,
+} from "./codex-thread-pins-shared.js";
 
 const React = createReact();
 const jsxRuntime = createJsxRuntime();
@@ -30,6 +37,7 @@ const presetButtonClassName = "rounded-lg border border-token-border bg-token-bg
 const selectedPresetButtonClassName = "border-token-accent-primary bg-token-background-accent";
 const officialPresetButtonClassName = "border-token-accent-primary/50 bg-token-background-accent/40";
 const officialBadgeClassName = "rounded-full bg-token-background-accent px-2 py-0.5 text-[11px] font-medium text-token-accent-primary";
+const subtlePanelClassName = "rounded-lg border border-token-border bg-token-bg-fog px-3 py-2";
 
 const bubblePresets = [
   {
@@ -422,6 +430,84 @@ function ThemeCustomizer(props) {
   });
 }
 
+function HeaderPinnedThreadSettings() {
+  const [threadPinsMode, setThreadPinsMode] = React.useState(() => readStoredThreadPinsMode());
+
+  React.useEffect(() => {
+    const syncSettingsState = () => {
+      setThreadPinsMode(readStoredThreadPinsMode());
+    };
+
+    window.addEventListener(THREAD_PINS_MODE_UPDATED_EVENT, syncSettingsState);
+    return () => {
+      window.removeEventListener(THREAD_PINS_MODE_UPDATED_EVENT, syncSettingsState);
+    };
+  }, []);
+
+  const onSelectMode = React.useCallback((nextMode) => {
+    const resolvedMode = writeStoredThreadPinsMode(nextMode);
+    setThreadPinsMode(resolvedMode);
+  }, []);
+
+  const headerModeOptions = React.useMemo(
+    () => [
+      { id: THREAD_PINS_MODE_DEFAULT, label: "Current default", ariaLabel: "Use the current header behavior" },
+      { id: THREAD_PINS_MODE_HEADER, label: "Pinned threads", ariaLabel: "Mirror existing pinned threads into the header" },
+    ],
+    [],
+  );
+
+  return jsxs(SettingsGroup, {
+    children: [
+      jsx(SettingsGroup.Header, {
+        title: "Pinned threads in top bar",
+        subtitle: "Mirror the same pinned threads from the sidebar into a dedicated top bar.",
+      }),
+      jsx(SettingsGroup.Content, {
+        children: jsxs("div", {
+          className: "flex flex-col gap-3",
+          children: [
+            jsx(SettingsCard, {
+              children: jsx(SettingsRow, {
+                label: "Top bar behavior",
+                description: "Choose between the stock layout and a dedicated top strip that mirrors your existing sidebar pins.",
+                control: jsx(SegmentedToggle, {
+                  options: headerModeOptions,
+                  selectedId: threadPinsMode,
+                  onSelect: onSelectMode,
+                  ariaLabel: "Pinned threads header mode",
+                }),
+              }),
+            }),
+            jsx(SettingsCard, {
+              children: jsx("div", {
+                className: "flex flex-col gap-2 p-3 text-sm text-token-text-secondary",
+                children: jsxs("div", {
+                  className: subtlePanelClassName,
+                  children: [
+                    jsx("div", {
+                      className: "font-medium text-token-text-primary",
+                      children: "How it works",
+                    }),
+                    jsx("div", {
+                      className: "mt-1",
+                      children: "This setting does not create a second pin list. It simply mirrors the threads you already pinned in the sidebar into the top bar.",
+                    }),
+                    jsx("div", {
+                      className: "mt-2",
+                      children: "Use the existing Pin/Unpin action in the sidebar, and the header will stay in sync automatically.",
+                    }),
+                  ],
+                }),
+              }),
+            }),
+          ],
+        }),
+      }),
+    ],
+  });
+}
+
 function MessageAppearanceSettings() {
   const [messageStyle, setMessageStyle] = React.useState(() => readStoredMessageStyle());
   const [bubbleTheme, setBubbleTheme] = React.useState(() => readStoredBubbleTheme());
@@ -463,70 +549,75 @@ function MessageAppearanceSettings() {
 
   const showBubbleCustomizer = messageStyle === STYLE_BUBBLES;
 
-  return jsxs(SettingsGroup, {
+  return jsxs(React.Fragment, {
     children: [
-      jsx(SettingsGroup.Header, {
-        title: "Chat bubbles",
-        subtitle: "Choose how conversation messages are rendered in the thread view.",
-      }),
-      jsx(SettingsGroup.Content, {
-        children: jsxs("div", {
-          className: "flex flex-col gap-3",
-          children: [
-            jsx(SettingsCard, {
-              children: jsx(SettingsRow, {
-                label: "Message style",
-                description: "Switch between the stock layout and the custom bubble layout.",
-                control: jsx(SegmentedToggle, {
-                  options,
-                  selectedId: messageStyle,
-                  onSelect: onSelectStyle,
-                  ariaLabel: "Message style",
+      jsxs(SettingsGroup, {
+        children: [
+          jsx(SettingsGroup.Header, {
+            title: "Chat bubbles",
+            subtitle: "Choose how conversation messages are rendered in the thread view.",
+          }),
+          jsx(SettingsGroup.Content, {
+            children: jsxs("div", {
+              className: "flex flex-col gap-3",
+              children: [
+                jsx(SettingsCard, {
+                  children: jsx(SettingsRow, {
+                    label: "Message style",
+                    description: "Switch between the stock layout and the custom bubble layout.",
+                    control: jsx(SegmentedToggle, {
+                      options,
+                      selectedId: messageStyle,
+                      onSelect: onSelectStyle,
+                      ariaLabel: "Message style",
+                    }),
+                  }),
                 }),
-              }),
-            }),
-            showBubbleCustomizer
-              ? jsx(SettingsCard, {
-                  children: jsxs("div", {
-                    className: "flex flex-col gap-4 p-3",
-                    children: [
-                      jsxs("div", {
-                        className: "flex items-start justify-between gap-4 max-md:flex-col",
+                showBubbleCustomizer
+                  ? jsx(SettingsCard, {
+                      children: jsxs("div", {
+                        className: "flex flex-col gap-4 p-3",
                         children: [
                           jsxs("div", {
-                            className: "flex min-w-0 flex-1 flex-col gap-4",
+                            className: "flex items-start justify-between gap-4 max-md:flex-col",
                             children: [
-                              jsx(BubblePresetPicker, {
-                                theme: bubbleTheme,
-                                onApplyPreset: onSetTheme,
+                              jsxs("div", {
+                                className: "flex min-w-0 flex-1 flex-col gap-4",
+                                children: [
+                                  jsx(BubblePresetPicker, {
+                                    theme: bubbleTheme,
+                                    onApplyPreset: onSetTheme,
+                                  }),
+                                  jsx(ThemeCustomizer, {
+                                    theme: bubbleTheme,
+                                    setTheme: onSetTheme,
+                                  }),
+                                ],
                               }),
-                              jsx(ThemeCustomizer, {
+                              jsx(BubblePreview, {
                                 theme: bubbleTheme,
-                                setTheme: onSetTheme,
                               }),
                             ],
                           }),
-                          jsx(BubblePreview, {
-                            theme: bubbleTheme,
+                          jsx("div", {
+                            className: "flex justify-end",
+                            children: jsx("button", {
+                              type: "button",
+                              className: resetButtonClassName,
+                              onClick: onResetTheme,
+                              children: "Reset bubble style",
+                            }),
                           }),
                         ],
                       }),
-                      jsx("div", {
-                        className: "flex justify-end",
-                        children: jsx("button", {
-                          type: "button",
-                          className: resetButtonClassName,
-                          onClick: onResetTheme,
-                          children: "Reset bubble style",
-                        }),
-                      }),
-                    ],
-                  }),
-                })
-              : null,
-          ],
-        }),
+                    })
+                  : null,
+              ],
+            }),
+          }),
+        ],
       }),
+      jsx(HeaderPinnedThreadSettings, {}),
     ],
   });
 }
