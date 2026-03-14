@@ -61,6 +61,30 @@
       "replace": "[\"clone\",\"--depth\",\"1\",\"--filter=blob:none\",Lw,r]",
       "count": 1,
       "already_contains": "[\"clone\",\"--depth\",\"1\",\"--filter=blob:none\",Lw,r]"
+    },
+    {
+      "name": "inject-appearance-runtime-script",
+      "glob": "webview/index.html",
+      "find": "<script type=\"module\" crossorigin src=\"./assets/index-CywFs2Ob.js\"></script>",
+      "replace": "<script type=\"module\" crossorigin src=\"./assets/codex-appearance-runtime.js\"></script>\n    <script type=\"module\" crossorigin src=\"./assets/index-CywFs2Ob.js\"></script>",
+      "count": 1,
+      "already_contains": "./assets/codex-appearance-runtime.js"
+    },
+    {
+      "name": "inject-appearance-stylesheet",
+      "glob": "webview/index.html",
+      "find": "<link rel=\"stylesheet\" crossorigin href=\"./assets/index-BdHZQcdG.css\">",
+      "replace": "<link rel=\"stylesheet\" crossorigin href=\"./assets/index-BdHZQcdG.css\">\n    <link rel=\"stylesheet\" crossorigin href=\"./assets/codex-appearance.css\">",
+      "count": 1,
+      "already_contains": "./assets/codex-appearance.css"
+    },
+    {
+      "name": "extend-appearance-settings-page",
+      "glob": "webview/assets/appearance-settings-*.js",
+      "find": "import{o as r,s as i}from\"./settings-surface-FyeZDgVr.js\";import\"./settings-row-BAVonNmd.js\";var a=e(),o=t();function s(){let e=(0,a.c)(1),t;return e[0]===Symbol.for(`react.memo_cache_sentinel`)?(t=(0,o.jsx)(i,{title:(0,o.jsx)(r,{slug:`appearance`}),children:(0,o.jsx)(n,{})}),e[0]=t):t=e[0],t}export{s as AppearanceSettings};",
+      "replace": "import{o as r,s as i}from\"./settings-surface-FyeZDgVr.js\";import\"./settings-row-BAVonNmd.js\";import{C as c}from\"./codex-appearance-settings.js\";var a=e(),o=t();function s(){let e=(0,a.c)(1),t;return e[0]===Symbol.for(`react.memo_cache_sentinel`)?(t=(0,o.jsxs)(i,{title:(0,o.jsx)(r,{slug:`appearance`}),children:[(0,o.jsx)(c,{}),(0,o.jsx)(n,{})]}),e[0]=t):t=e[0],t}export{s as AppearanceSettings};",
+      "count": 1,
+      "already_contains": "./codex-appearance-settings.js"
     }
   ]
 }

@@ -4,11 +4,14 @@ This directory holds the durable assets for the local Linux customizations:
 
 - bundled UI and mono fonts
 - CSS overrides that prefer the bundled fonts
+- webview shell assets such as settings modules, runtime hooks, and appearance CSS
 - a manifest describing text replacements inside the extracted `app.asar`
 
 The execution helper that applies this bundle to a concrete `app.asar` is kept
 out of git on purpose. That keeps repo history clean while still letting local
-machines reapply the same patch set after an app update.
+machines reapply the same patch set after an app update. The helper now also
+mirrors matching `webview/` assets into the unpacked app's `content/webview/`
+tree, because the Linux wrapper serves the UI shell from there.
 
 What this bundle changes:
 
@@ -17,6 +20,7 @@ What this bundle changes:
   exposes file selection
 - resolves a selected file back to its parent directory
 - removes the `git clone --sparse` flag from recommended-skills bootstrap
+- adds an Appearance setting that toggles custom conversation bubble styling
 
 Expected local workflow after updating Codex Desktop:
 

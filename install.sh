@@ -19,6 +19,7 @@ CC_BIN=""
 CXX_BIN=""
 CXXFLAGS_EXTRA=()
 LDFLAGS_EXTRA=()
+ASAR_CMD=()
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -66,6 +67,7 @@ Install them first:
         error "A C/C++ toolchain is required (gcc/g++ or clang/clang++)"
     fi
 
+    find_asar_cli
     info "All dependencies found"
 }
 
@@ -112,6 +114,25 @@ download_sevenzip() {
         error "Failed to unpack 7-Zip archive"
 
     [ -x "$SEVENZIP_BIN" ] || error "Downloaded 7-Zip archive did not contain 7zz"
+}
+
+find_asar_cli() {
+    local candidates=(
+        "$SCRIPT_DIR/.cache/tools/asar/bin/asar.js"
+        "$HOME/.npm/_npx/8b3f11f22d4db0c9/node_modules/asar/bin/asar.js"
+    )
+    local candidate
+
+    for candidate in "${candidates[@]}"; do
+        if [ -f "$candidate" ]; then
+            ASAR_CMD=(node "$candidate")
+            info "Using cached asar CLI: $candidate"
+            return
+        fi
+    done
+
+    ASAR_CMD=(npx --yes asar)
+    info "Using npx asar CLI"
 }
 
 ensure_sevenzip() {
@@ -309,7 +330,7 @@ patch_asar() {
 
     info "Extracting app.asar..."
     cd "$WORK_DIR"
-    npx --yes asar extract "$resources_dir/app.asar" app-extracted
+    "${ASAR_CMD[@]}" extract "$resources_dir/app.asar" app-extracted
 
     # Copy unpacked native modules if they exist
     if [ -d "$resources_dir/app.asar.unpacked" ]; then
@@ -326,7 +347,7 @@ patch_asar() {
     # Repack
     info "Repacking app.asar..."
     cd "$WORK_DIR"
-    npx asar pack app-extracted app.asar --unpack "{*.node,*.so,*.dylib}" 2>/dev/null
+    "${ASAR_CMD[@]}" pack app-extracted app.asar --unpack "{*.node,*.so,*.dylib}" 2>/dev/null
 
     info "app.asar patched"
 }

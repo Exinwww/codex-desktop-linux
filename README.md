@@ -55,9 +55,82 @@ Generated or local-only paths:
 - `codex-app/` - generated Linux app bundle
 - `dist/` - generated Debian packages
 - `.cache/` - downloaded helper tools such as modern `7-Zip`
+- `.sandbox/` - isolated development app, user data, and patch workdirs
 - `patch-work/` - temporary extraction and repack workdirs
 - `local/` - private helper scripts, intentionally gitignored
 - `Codex.dmg` - optional local copy of the upstream macOS installer
+
+## Development sandbox
+
+If you want to experiment on a separate copy without touching your main app,
+use the sandbox helpers under `scripts/`.
+
+The sandbox uses the normal `install.sh` output format, but keeps its own files
+under `./.sandbox/`:
+
+- app files under `./.sandbox/codex-app/`
+- patch workdirs under `./.sandbox/patch-work/`
+- Electron profile data under `./.sandbox/profile/`
+
+Create or refresh the sandbox from the latest DMG:
+
+```bash
+./scripts/sandbox-install.sh /path/to/Codex.dmg
+```
+
+If you omit the DMG path, the helper falls back to the same auto-download logic
+as `install.sh`.
+
+Reapply the committed patch bundle after editing files under
+`patches/codex-desktop/`:
+
+```bash
+./scripts/sandbox-repatch.sh
+```
+
+Launch the isolated app copy:
+
+```bash
+./scripts/sandbox-run.sh
+```
+
+The sandbox runner wraps the separate app copy instead of changing the main
+installer. It also points Electron at isolated XDG config/data/cache paths.
+
+By default the sandbox retargets the bundled app to webview port `55175`, so
+it can run alongside the normal app on `5175`. If you change the sandbox port
+later, rerun `./scripts/sandbox-repatch.sh` so the sandbox bundle and wrapper
+stay aligned.
+
+You can override the sandbox paths with these environment variables:
+
+- `CODEX_SANDBOX_ROOT`
+- `CODEX_SANDBOX_APP_DIR`
+- `CODEX_SANDBOX_PROFILE_DIR`
+
+The sandbox runner also accepts:
+
+- `CODEX_SANDBOX_WEBVIEW_HOST`
+- `CODEX_SANDBOX_WEBVIEW_PORT`
+- `CODEX_SANDBOX_REMOTE_DEBUGGING_PORT`
+- `CODEX_SANDBOX_OPEN_DEVTOOLS`
+
+The sandbox repatch step also forces DevTools, Inspect Element, and the debug
+menu on inside the sandbox bundle only. By default `sandbox-run.sh` opens
+Chromium DevTools and exposes a remote debugging endpoint on port `9223`.
+
+For quick UI experiments, edit the tracked dev override at
+`./sandbox/dev/codex-appearance-dev.css`, then sync or launch it with:
+
+```bash
+./scripts/sandbox-dev-sync.sh
+./scripts/sandbox-dev.sh
+```
+
+`sandbox-dev-sync.sh` copies that file into the sandbox webview assets and
+injects an `@import` for `codex-appearance-dev.css` into the extracted theme
+CSS, so you can iterate on appearance changes without rebuilding the app or
+repacking `app.asar`.
 
 ## Requirements
 
@@ -133,7 +206,7 @@ This produces:
 
 ### 2. Reapply local custom patches
 
-If you maintain a private helper in `local/`, run it after every new `install.sh` output so the generated `codex-app/resources/app.asar` picks up your local fixes again.
+If you maintain a private helper in `local/`, run it after every new `install.sh` output so the generated `codex-app/resources/app.asar` and sibling `content/webview/` shell pick up your local fixes again.
 
 Typical local command:
 

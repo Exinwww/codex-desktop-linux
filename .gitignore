@@ -5,3 +5,6 @@ dist/
 local/
 patch-work/
 .cache/
+.sandbox/
+__pycache__/
+.vscode

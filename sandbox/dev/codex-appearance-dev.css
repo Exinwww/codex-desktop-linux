@@ -1,0 +1,45 @@
+:root[data-codex-message-style="bubbles"],
+:host[data-codex-message-style="bubbles"] {
+  --codex-dev-user-bubble-bg: #2563eb;
+  --codex-dev-user-bubble-fg: #ffffff;
+  --codex-dev-user-bubble-border: rgba(37, 99, 235, 0.34);
+  --codex-dev-user-bubble-shadow: rgba(37, 99, 235, 0.18);
+  --codex-dev-assistant-bg: #f8fafc;
+  --codex-dev-assistant-fg: #1f2937;
+  --codex-dev-assistant-border: rgba(31, 41, 55, 0.12);
+  --codex-dev-bubble-radius: 18px;
+  --codex-dev-assistant-radius: 14px;
+  --codex-dev-bubble-border-width: 1px;
+  --codex-dev-bubble-shadow-blur: 26px;
+  --codex-dev-bubble-padding-x: 14px;
+  --codex-dev-bubble-padding-y: 10px;
+  --codex-dev-assistant-padding-x: 14px;
+  --codex-dev-assistant-padding-y: 10px;
+}
+
+/* 沙盒调试 CSS 也改成由设置项驱动，避免再误伤默认界面。 */
+:root[data-codex-message-style="bubbles"] div[data-content-search-unit-key$=":user"] > div > div.group > div:first-child,
+:host[data-codex-message-style="bubbles"] div[data-content-search-unit-key$=":user"] > div > div.group > div:first-child {
+  background: var(--codex-dev-user-bubble-bg) !important;
+  color: var(--codex-dev-user-bubble-fg) !important;
+  border: var(--codex-dev-bubble-border-width) solid var(--codex-dev-user-bubble-border) !important;
+  border-radius: var(--codex-dev-bubble-radius) !important;
+  box-shadow: 0 10px var(--codex-dev-bubble-shadow-blur) var(--codex-dev-user-bubble-shadow) !important;
+  padding: var(--codex-dev-bubble-padding-y) var(--codex-dev-bubble-padding-x) !important;
+}
+
+:root[data-codex-message-style="bubbles"] div[data-content-search-unit-key$=":user"] > div > div.group > div:first-child span,
+:root[data-codex-message-style="bubbles"] div[data-content-search-unit-key$=":user"] > div > div.group > div:first-child .text-size-chat,
+:host[data-codex-message-style="bubbles"] div[data-content-search-unit-key$=":user"] > div > div.group > div:first-child span,
+:host[data-codex-message-style="bubbles"] div[data-content-search-unit-key$=":user"] > div > div.group > div:first-child .text-size-chat {
+  color: var(--codex-dev-user-bubble-fg) !important;
+}
+
+:root[data-codex-message-style="bubbles"] div[data-content-search-unit-key$=":assistant"] > div > div:first-child,
+:host[data-codex-message-style="bubbles"] div[data-content-search-unit-key$=":assistant"] > div > div:first-child {
+  background: var(--codex-dev-assistant-bg);
+  color: var(--codex-dev-assistant-fg);
+  border: var(--codex-dev-bubble-border-width) solid var(--codex-dev-assistant-border);
+  border-radius: var(--codex-dev-assistant-radius);
+  padding: var(--codex-dev-assistant-padding-y) var(--codex-dev-assistant-padding-x);
+}
