@@ -132,6 +132,59 @@ injects an `@import` for `codex-appearance-dev.css` into the extracted theme
 CSS, so you can iterate on appearance changes without rebuilding the app or
 repacking `app.asar`.
 
+## Remote relay sandbox MVP
+
+For localhost-only remote debugging, the workspace now includes a relay MVP
+under `remote/` that serves the original Codex webview frontend instead of a
+custom lookalike page:
+
+- `remote/host-agent/server.mjs` attaches to the live sandboxed Codex renderer
+  over Chromium DevTools and injects a relay bridge into the real webview
+- `remote/relay-server/server.mjs` serves the extracted Codex webview assets,
+  injects a browser shim for `window.electronBridge`, and relays events/RPCs
+- the remote browser therefore loads the same frontend bundle, styling, and
+  routes as the local Codex app
+
+Launch the sandboxed Codex app:
+
+```bash
+./scripts/sandbox-run.sh
+```
+
+Then open Settings -> Remote -> Remote relay and enable the sandbox remote toggle.
+That setting persists across future `sandbox-run.sh` launches and starts/stops the
+localhost relay plus host agent automatically. If you still want the old manual
+workflow for debugging the relay in isolation, `./scripts/sandbox-remote-dev.sh`
+continues to work.
+
+For a standalone relay deployment bundle, you can either call the low-level generator directly or use the project-root wrapper:
+
+```bash
+./scripts/build-relay-bundle.sh --public-origin https://relay.example.com --public-rendezvous-origin https://rv.example.com --client-token 'browser-secret'
+```
+
+Equivalent low-level command:
+
+```bash
+./remote/server/setup-relay-server.sh \
+  --target /opt/codex-remote \
+  --public-origin https://relay.example.com \
+  --public-rendezvous-origin https://rv.example.com \
+  --client-token 'browser-secret' \
+  --write-systemd
+```
+
+That produces a self-contained remote server directory with `run-relay.sh`, `run-rendezvous.sh`,
+`config/relay.env`, `config/rendezvous.env`, copied webview assets, and optional systemd unit templates.
+
+Open the remote frontend through the rendezvous entrypoint:
+
+```text
+http://127.0.0.1:9002/connect?deviceId=sandbox-local
+```
+
+That URL is now the same in localhost and public deployments: the browser always enters through rendezvous, then types the pairing code shown in the host app before a relay session is created. The relay root only redirects into rendezvous or shows a landing page.
+
 ## Requirements
 
 For a prebuilt `.deb`, you only need:
@@ -332,3 +385,9 @@ Make sure you understand the redistribution implications before publicly sharing
 ## License
 
 MIT
+
+If you configure a relay-side browser token, open the remote UI with a URL like:
+
+```text
+https://relay.example.com/?deviceId=your-device&clientToken=browser-secret
+```

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codex Remote Relay</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">Codex Remote</p>
+          <h1>Mirror the sandboxed Codex window through localhost relay</h1>
+        </div>
+        <form id="connect-form" class="connect-form">
+          <label>
+            Device ID
+            <input id="device-id" name="deviceId" type="text" value="sandbox-local" autocomplete="off" />
+          </label>
+          <button type="submit">Connect</button>
+        </form>
+      </section>
+
+      <section class="layout">
+        <article class="viewer-panel">
+          <div class="status-row">
+            <div>
+              <span id="status-badge" class="badge offline">Offline</span>
+              <span id="status-text" class="status-text">Waiting for host agent</span>
+            </div>
+            <div class="status-actions">
+              <button id="refresh-frame" type="button">Refresh frame</button>
+            </div>
+          </div>
+          <div id="frame-shell" class="frame-shell">
+            <img id="frame-image" alt="Codex remote frame" />
+            <div id="frame-empty" class="frame-empty">
+              Start the relay and host agent, then launch the sandboxed Codex app.
+            </div>
+          </div>
+          <dl class="meta-grid">
+            <div>
+              <dt>Title</dt>
+              <dd id="meta-title">-</dd>
+            </div>
+            <div>
+              <dt>URL</dt>
+              <dd id="meta-url">-</dd>
+            </div>
+            <div>
+              <dt>Viewport</dt>
+              <dd id="meta-viewport">-</dd>
+            </div>
+            <div>
+              <dt>Last frame</dt>
+              <dd id="meta-frame-updated">-</dd>
+            </div>
+          </dl>
+        </article>
+
+        <aside class="control-panel">
+          <section>
+            <h2>Text input</h2>
+            <textarea id="text-input" rows="4" placeholder="Send text into the currently focused Codex field"></textarea>
+            <div class="button-row">
+              <button id="send-text" type="button">Send text</button>
+              <button data-key="Enter" type="button" class="ghost">Enter</button>
+              <button data-key="Backspace" type="button" class="ghost">Backspace</button>
+              <button data-key="Escape" type="button" class="ghost">Esc</button>
+            </div>
+          </section>
+
+          <section>
+            <h2>Scroll</h2>
+            <div class="button-row">
+              <button data-scroll="-420" type="button">Scroll up</button>
+              <button data-scroll="420" type="button">Scroll down</button>
+            </div>
+          </section>
+
+          <section>
+            <h2>Tips</h2>
+            <ul>
+              <li>Tap or click the screenshot to focus controls in the real Codex window.</li>
+              <li>The remote page stays visually consistent because it mirrors the actual Codex app frame.</li>
+              <li>This debug build assumes relay, host agent, and Codex all run on localhost.</li>
+            </ul>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

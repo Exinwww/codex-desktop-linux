@@ -13,6 +13,9 @@ OPEN_DEVTOOLS="${CODEX_SANDBOX_OPEN_DEVTOOLS:-1}"
 WEBVIEW_DIR="$SANDBOX_APP_DIR/content/webview"
 RUNTIME_ROOT="$SANDBOX_PROFILE_DIR/runtime"
 PID_FILE="$RUNTIME_ROOT/codex-webview-${WEBVIEW_PORT}.pid"
+LOG_FILE="$RUNTIME_ROOT/codex-webview-${WEBVIEW_PORT}.log"
+REMOTE_SETTINGS_FILE="$RUNTIME_ROOT/remote-dev-settings.json"
+WEBVIEW_SERVER_SCRIPT="$SCRIPT_DIR/sandbox-webview-server.py"
 
 find_codex_cli() {
     if [ -n "${CODEX_CLI_PATH:-}" ] && [ -x "${CODEX_CLI_PATH}" ]; then
@@ -67,7 +70,36 @@ raise SystemExit(0 if result == 0 else 1)
 PY
 }
 
-cleanup_http_server() {
+wait_for_webview_server() {
+    local attempts=50
+    local pid=""
+
+    while [ "$attempts" -gt 0 ]; do
+        if port_in_use; then
+            return 0
+        fi
+
+        if [ -f "$PID_FILE" ]; then
+            pid="$(cat "$PID_FILE" 2>/dev/null || true)"
+            if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
+                echo "Sandbox webview server exited before becoming ready." >&2
+                echo "See log: $LOG_FILE" >&2
+                tail -n 40 "$LOG_FILE" >&2 || true
+                return 1
+            fi
+        fi
+
+        sleep 0.1
+        attempts=$((attempts - 1))
+    done
+
+    echo "Timed out waiting for the sandbox webview server on $WEBVIEW_HOST:$WEBVIEW_PORT." >&2
+    echo "See log: $LOG_FILE" >&2
+    tail -n 40 "$LOG_FILE" >&2 || true
+    return 1
+}
+
+cleanup_webview_server() {
     local pid=""
 
     if [ ! -f "$PID_FILE" ]; then
@@ -94,19 +126,19 @@ if [ ! -d "$WEBVIEW_DIR" ]; then
     exit 1
 fi
 
+if [ ! -f "$WEBVIEW_SERVER_SCRIPT" ]; then
+    echo "Sandbox webview server script not found at $WEBVIEW_SERVER_SCRIPT" >&2
+    exit 1
+fi
+
 mkdir -p "$SANDBOX_PROFILE_DIR" "$RUNTIME_ROOT"
-cleanup_http_server
+cleanup_webview_server
 
 if port_in_use; then
     echo "Port $WEBVIEW_PORT is already in use." >&2
     echo "Choose a different CODEX_SANDBOX_WEBVIEW_PORT and rerun ./scripts/sandbox-repatch.sh if you need another sandbox instance." >&2
     exit 1
 fi
-
-python3 -m http.server "$WEBVIEW_PORT" --bind "$WEBVIEW_HOST" --directory "$WEBVIEW_DIR" >/dev/null 2>&1 &
-HTTP_PID=$!
-printf '%s\n' "$HTTP_PID" > "$PID_FILE"
-trap cleanup_http_server EXIT
 
 if ! CODEX_CLI_PATH="$(find_codex_cli)"; then
     echo "Error: Codex CLI not found. Install with: npm i -g @openai/codex" >&2
@@ -118,6 +150,23 @@ export XDG_CONFIG_HOME="$SANDBOX_PROFILE_DIR/config"
 export XDG_DATA_HOME="$SANDBOX_PROFILE_DIR/data"
 export XDG_CACHE_HOME="$SANDBOX_PROFILE_DIR/cache"
 mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME"
+
+python3 "$WEBVIEW_SERVER_SCRIPT" \
+    --bind "$WEBVIEW_HOST" \
+    --port "$WEBVIEW_PORT" \
+    --webview-dir "$WEBVIEW_DIR" \
+    --repo-dir "$REPO_DIR" \
+    --settings-file "$REMOTE_SETTINGS_FILE" \
+    >"$LOG_FILE" 2>&1 &
+WEBVIEW_SERVER_PID=$!
+printf '%s\n' "$WEBVIEW_SERVER_PID" > "$PID_FILE"
+trap cleanup_webview_server EXIT
+wait_for_webview_server
+
+echo "Sandbox webview server log: $LOG_FILE"
+if [ -f "$REMOTE_SETTINGS_FILE" ]; then
+    echo "Remote settings: $REMOTE_SETTINGS_FILE"
+fi
 
 electron_args=(--no-sandbox "--remote-debugging-port=${REMOTE_DEBUGGING_PORT}")
 if [ "$OPEN_DEVTOOLS" = "1" ]; then

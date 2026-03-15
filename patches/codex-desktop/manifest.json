@@ -85,6 +85,46 @@
       "replace": "import{o as r,s as i}from\"./settings-surface-FyeZDgVr.js\";import\"./settings-row-BAVonNmd.js\";import{C as c}from\"./codex-appearance-settings.js\";var a=e(),o=t();function s(){let e=(0,a.c)(1),t;return e[0]===Symbol.for(`react.memo_cache_sentinel`)?(t=(0,o.jsxs)(i,{title:(0,o.jsx)(r,{slug:`appearance`}),children:[(0,o.jsx)(c,{}),(0,o.jsx)(n,{})]}),e[0]=t):t=e[0],t}export{s as AppearanceSettings};",
       "count": 1,
       "already_contains": "./codex-appearance-settings.js"
+    },
+    {
+      "name": "extend-remote-connections-settings-page",
+      "glob": "webview/assets/remote-connections-settings-*.js",
+      "find": "import{t as A}from\"./trash-CHPDSgS8.js\";import{n as j,o as M,s as N,t as P}from\"./settings-surface-FyeZDgVr.js\";var ne=r(),F=e(t()),I=u(),",
+      "replace": "import{t as A}from\"./trash-CHPDSgS8.js\";import{n as j,o as M,s as N,t as P}from\"./settings-surface-FyeZDgVr.js\";import{C as B0}from\"./codex-remote-settings.js\";var ne=r(),F=e(t()),I=u(),",
+      "count": 1,
+      "already_contains": "./codex-remote-settings.js"
+    },
+    {
+      "name": "inject-remote-settings-card-into-connections-page",
+      "glob": "webview/assets/remote-connections-settings-*.js",
+      "find": "let Ne;e[83]!==Oe||e[84]!==Me?(Ne=(0,I.jsx)(N,{title:be,subtitle:xe,fullWidth:!0,contentClassName:`max-w-[1200px]`,children:(0,I.jsxs)(j,{className:`gap-3`,children:[Oe,Me]})}),e[83]=Oe,e[84]=Me,e[85]=Ne):Ne=e[85];",
+      "replace": "let Ne;e[83]!==Oe||e[84]!==Me?(Ne=(0,I.jsx)(N,{title:be,subtitle:xe,fullWidth:!0,contentClassName:`max-w-[1200px]`,children:(0,I.jsxs)(j,{className:`gap-3`,children:[(0,I.jsx)(B0,{}),Oe,Me]})}),e[83]=Oe,e[84]=Me,e[85]=Ne):Ne=e[85];",
+      "count": 1,
+      "already_contains": "(0,I.jsx)(B0,{})"
+    },
+    {
+      "name": "rename-connections-nav-to-remote",
+      "glob": "webview/assets/settings-surface-*.js",
+      "find": "case`connections`:{let e;return t[12]===Symbol.for(`react.memo_cache_sentinel`)?(e=(0,c.jsx)(r,{id:`settings.nav.connections`,defaultMessage:`Connections`,description:`Title for connections settings section`}),t[12]=e):e=t[12],e}",
+      "replace": "case`connections`:{let e;return t[12]===Symbol.for(`react.memo_cache_sentinel`)?(e=(0,c.jsx)(r,{id:`settings.nav.connections`,defaultMessage:`Remote`,description:`Title for remote settings section`}),t[12]=e):e=t[12],e}",
+      "count": 1,
+      "already_contains": "id:`settings.nav.connections`,defaultMessage:`Remote`"
+    },
+    {
+      "name": "rename-connections-section-to-remote",
+      "glob": "webview/assets/settings-surface-*.js",
+      "find": "case`connections`:{let e;return t[12]===Symbol.for(`react.memo_cache_sentinel`)?(e=(0,c.jsx)(r,{id:`settings.section.connections`,defaultMessage:`Connections`,description:`Title for connections settings section`}),t[12]=e):e=t[12],e}",
+      "replace": "case`connections`:{let e;return t[12]===Symbol.for(`react.memo_cache_sentinel`)?(e=(0,c.jsx)(r,{id:`settings.section.connections`,defaultMessage:`Remote`,description:`Title for remote settings section`}),t[12]=e):e=t[12],e}",
+      "count": 1,
+      "already_contains": "id:`settings.section.connections`,defaultMessage:`Remote`"
+    },
+    {
+      "name": "always-show-remote-settings-page-in-electron",
+      "glob": "webview/assets/index-*.js",
+      "find": "case`skills-settings`:return r===`extension`;case`connections`:return r===`electron`&&a;case`usage`:return o;case`appearance`:case`general-settings`:case`agent`:case`git-settings`:case`account`:case`data-controls`:case`personalization`:case`local-environments`:case`worktrees`:case`environments`:case`mcp-settings`:return!0",
+      "replace": "case`skills-settings`:return r===`extension`;case`connections`:return r===`electron`;case`usage`:return o;case`appearance`:case`general-settings`:case`agent`:case`git-settings`:case`account`:case`data-controls`:case`personalization`:case`local-environments`:case`worktrees`:case`environments`:case`mcp-settings`:return!0",
+      "count": 1,
+      "already_contains": "case`skills-settings`:return r===`extension`;case`connections`:return r===`electron`;case`usage`:return o;"
     }
   ]
 }
