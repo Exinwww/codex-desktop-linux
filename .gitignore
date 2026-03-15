@@ -8,3 +8,4 @@ patch-work/
 .sandbox/
 __pycache__/
 .vscode
+.main-patch-work/
