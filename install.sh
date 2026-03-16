@@ -427,7 +427,25 @@ exec "$SCRIPT_DIR/electron" --no-sandbox "$@"
 SCRIPT
 
     chmod +x "$INSTALL_DIR/start.sh"
-    info "Start script created"
+    info "Fallback start script created"
+}
+
+integrate_main_remote_runtime() {
+    local helper="$SCRIPT_DIR/scripts/integrate-main-app.sh"
+    local enabled="${APPLY_MAIN_REMOTE_INTEGRATION:-1}"
+
+    if [ "$enabled" != "1" ]; then
+        info "Skipping main app Remote integration (APPLY_MAIN_REMOTE_INTEGRATION=$enabled)"
+        return
+    fi
+
+    if [ ! -x "$helper" ]; then
+        warn "Main app Remote integration helper not found at $helper; keeping fallback launcher"
+        return
+    fi
+
+    info "Integrating committed main app patches and Remote runtime"
+    "$helper" "$INSTALL_DIR"
 }
 
 # ---- Main ----
@@ -457,6 +475,7 @@ main() {
     extract_webview "$app_dir"
     install_app
     create_start_script
+    integrate_main_remote_runtime
 
     if ! command -v codex &>/dev/null; then
         warn "Codex CLI not found. Install it: npm i -g @openai/codex"

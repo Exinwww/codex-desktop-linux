@@ -37,7 +37,16 @@ function getWebSocketCtor() {
   if (typeof WebSocket !== 'undefined') {
     return WebSocket;
   }
-  return require('../../patch-work/local/extract/node_modules/ws');
+
+  for (const candidate of ['ws', '../node_modules/ws', '../../node_modules/ws', '../../patch-work/local/extract/node_modules/ws']) {
+    try {
+      return require(candidate);
+    } catch {
+      // Try the next candidate.
+    }
+  }
+
+  throw new Error('No WebSocket implementation available for remote host-agent');
 }
 
 class CdpClient {
@@ -339,7 +348,45 @@ function buildRemoteBridgeInstallExpression() {
           if (typeof fn !== 'function') {
             throw new Error('Unsupported remote bridge method: ' + method);
           }
-          fn(...args);
+          try {
+            fn(...args);
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.warn('[remote-bridge] sendMessageFromView failed', {
+              messageType: message?.type ?? null,
+              requestMethod: message?.request?.method ?? null,
+              requestId: message?.request?.id ?? message?.requestId ?? null,
+              error: errorMessage,
+            });
+            if (message?.type === 'mcp-request' && message.request?.id) {
+              pushEvent({
+                kind: 'view-message',
+                data: {
+                  type: 'mcp-response',
+                  hostId: message.hostId || 'local',
+                  message: {
+                    id: message.request.id,
+                    error: { message: errorMessage },
+                  },
+                },
+              });
+              return true;
+            }
+            if (message?.type === 'fetch' && message.requestId) {
+              pushEvent({
+                kind: 'view-message',
+                data: {
+                  type: 'fetch-response',
+                  hostId: message.hostId || 'local',
+                  requestId: message.requestId,
+                  responseType: 'error',
+                  error: errorMessage,
+                },
+              });
+              return true;
+            }
+            return true;
+          }
           return true;
         }
 

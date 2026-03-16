@@ -101,30 +101,6 @@
       "replace": "let Ne;e[83]!==Oe||e[84]!==Me?(Ne=(0,I.jsx)(N,{title:be,subtitle:xe,fullWidth:!0,contentClassName:`max-w-[1200px]`,children:(0,I.jsxs)(j,{className:`gap-3`,children:[(0,I.jsx)(B0,{}),Oe,Me]})}),e[83]=Oe,e[84]=Me,e[85]=Ne):Ne=e[85];",
       "count": 1,
       "already_contains": "(0,I.jsx)(B0,{})"
-    },
-    {
-      "name": "rename-connections-nav-to-remote",
-      "glob": "webview/assets/settings-surface-*.js",
-      "find": "case`connections`:{let e;return t[12]===Symbol.for(`react.memo_cache_sentinel`)?(e=(0,c.jsx)(r,{id:`settings.nav.connections`,defaultMessage:`Connections`,description:`Title for connections settings section`}),t[12]=e):e=t[12],e}",
-      "replace": "case`connections`:{let e;return t[12]===Symbol.for(`react.memo_cache_sentinel`)?(e=(0,c.jsx)(r,{id:`settings.nav.connections`,defaultMessage:`Remote`,description:`Title for remote settings section`}),t[12]=e):e=t[12],e}",
-      "count": 1,
-      "already_contains": "id:`settings.nav.connections`,defaultMessage:`Remote`"
-    },
-    {
-      "name": "rename-connections-section-to-remote",
-      "glob": "webview/assets/settings-surface-*.js",
-      "find": "case`connections`:{let e;return t[12]===Symbol.for(`react.memo_cache_sentinel`)?(e=(0,c.jsx)(r,{id:`settings.section.connections`,defaultMessage:`Connections`,description:`Title for connections settings section`}),t[12]=e):e=t[12],e}",
-      "replace": "case`connections`:{let e;return t[12]===Symbol.for(`react.memo_cache_sentinel`)?(e=(0,c.jsx)(r,{id:`settings.section.connections`,defaultMessage:`Remote`,description:`Title for remote settings section`}),t[12]=e):e=t[12],e}",
-      "count": 1,
-      "already_contains": "id:`settings.section.connections`,defaultMessage:`Remote`"
-    },
-    {
-      "name": "always-show-remote-settings-page-in-electron",
-      "glob": "webview/assets/index-*.js",
-      "find": "case`skills-settings`:return r===`extension`;case`connections`:return r===`electron`&&a;case`usage`:return o;case`appearance`:case`general-settings`:case`agent`:case`git-settings`:case`account`:case`data-controls`:case`personalization`:case`local-environments`:case`worktrees`:case`environments`:case`mcp-settings`:return!0",
-      "replace": "case`skills-settings`:return r===`extension`;case`connections`:return r===`electron`;case`usage`:return o;case`appearance`:case`general-settings`:case`agent`:case`git-settings`:case`account`:case`data-controls`:case`personalization`:case`local-environments`:case`worktrees`:case`environments`:case`mcp-settings`:return!0",
-      "count": 1,
-      "already_contains": "case`skills-settings`:return r===`extension`;case`connections`:return r===`electron`;case`usage`:return o;"
     }
   ]
 }

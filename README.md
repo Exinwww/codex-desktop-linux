@@ -4,8 +4,8 @@ Run [OpenAI Codex Desktop](https://openai.com/codex/) on Linux by converting the
 
 This repo now has three clear layers:
 
-1. `install.sh` converts `Codex.dmg` into a runnable `codex-app/`
-2. your private local helper can reapply custom patches to `app.asar`
+1. `install.sh` converts `Codex.dmg` into a runnable `codex-app/` and integrates the committed main-app Remote runtime by default
+2. `scripts/main-repatch.sh` can reapply the committed patch bundle and refresh the embedded Remote runtime on an existing main app
 3. `build-deb.sh` packages the finished app into a Debian package
 
 ## Quick start
@@ -237,7 +237,7 @@ sudo pacman -S nodejs npm python curl tar unzip base-devel
 
 ## End-to-end workflow
 
-### 1. Convert the official DMG into a Linux app
+### 1. Convert the official DMG into a Linux app and embed the main Remote runtime
 
 Auto-download the current DMG:
 
@@ -251,21 +251,27 @@ Or use a DMG you already downloaded:
 ./install.sh /path/to/Codex.dmg
 ```
 
-This produces:
+This produces a Remote-enabled main app at:
 
 ```text
 ./codex-app/
 ```
 
-### 2. Reapply local custom patches
+`install.sh` now calls the tracked main-app integration helper automatically unless you explicitly set `APPLY_MAIN_REMOTE_INTEGRATION=0`.
 
-If you maintain a private helper in `local/`, run it after every new `install.sh` output so the generated `codex-app/resources/app.asar` and sibling `content/webview/` shell pick up your local fixes again.
+### 2. Reapply the committed patch bundle and refresh the embedded Remote runtime
 
-Typical local command:
+Use the tracked helper when you already have a `codex-app/` tree and want to resync it with the committed patch bundle and Remote runtime files:
 
 ```bash
-./local/apply_codex_patch.py ./codex-app/resources/app.asar
+./scripts/main-repatch.sh
 ```
+
+If you prefer an explicit main-app wrapper, `./scripts/main-install.sh /path/to/Codex.dmg` now just forwards to `install.sh` with the main Remote integration enabled.
+
+The main-app integration updates `codex-app/resources/app.asar`, mirrors the patched webview assets into `codex-app/content/webview/`, copies the bundled Remote runtime into `codex-app/remote/`, and rewrites `codex-app/start.sh` so the main app launches the managed webview server instead of a plain `python -m http.server`.
+
+The main app and sandbox now share the same Remote supervisor and webview-server implementations; the `scripts/main-*` and `scripts/sandbox-*` files are thin wrappers that only provide path and default-port differences.
 
 In this workspace, the committed patch bundle under `patches/codex-desktop/` is designed for:
 
@@ -330,14 +336,13 @@ The workflow [`release-deb.yml`](.github/workflows/release-deb.yml) runs on `ubu
 It performs the full pipeline:
 
 1. downloads the latest upstream `Codex.dmg`
-2. runs `install.sh`
-3. reapplies the committed patch bundle from `patches/codex-desktop/`
-4. runs `build-deb.sh`
-5. publishes `dist/*.deb` to a GitHub Release tagged with the Codex app version and Ubuntu target, for example `codex-desktop-linux-v26.309.31024-ubuntu20.04`
+2. runs the tracked main-app install flow
+3. runs `build-deb.sh`
+4. publishes `dist/*.deb` to a GitHub Release tagged with the Codex app version and Ubuntu target, for example `codex-desktop-linux-v26.309.31024-ubuntu20.04`
 
 The workflow uses the repository `GITHUB_TOKEN` with `contents: write` so it can create or update the release for a given upstream app version.
 
-The daily scheduled run checks the Codex app version found inside the latest DMG and skips patching, packaging, and release publishing when a release for that exact app version on Ubuntu 20.04 already exists.
+The daily scheduled run checks the Codex app version found inside the latest DMG and skips the build, packaging, and release publishing steps when a release for that exact app version on Ubuntu 20.04 already exists.
 
 ## Updating to a new Codex release
 
@@ -345,11 +350,12 @@ When a new upstream `Codex.dmg` appears, redo the build in this order:
 
 ```bash
 ./install.sh /path/to/new/Codex.dmg
-./local/apply_codex_patch.py ./codex-app/resources/app.asar   # if you keep the local helper
 ./build-deb.sh                                                # optional
 ```
 
-Important detail: `build-deb.sh` packages the current contents of `codex-app/` exactly as they are. If you want your fonts or JS fixes inside the `.deb`, apply your local patch before running `build-deb.sh`.
+If you edit `patches/codex-desktop/`, `remote/`, or the main integration scripts after the initial install, rerun `./scripts/main-repatch.sh` before packaging.
+
+Important detail: `install.sh` now integrates the committed main-app Remote runtime by default, and `build-deb.sh` still reruns `./scripts/main-repatch.sh` by default before packaging so the generated `.deb` always reflects the committed UI patches and embedded Remote runtime. Set `APPLY_MAIN_REMOTE_INTEGRATION=0` only if you explicitly want either step to skip that refresh.
 
 ## How it works
 
@@ -359,7 +365,7 @@ The macOS Codex app is an Electron app. The platform-independent JavaScript live
 - a macOS Electron runtime
 - macOS-only updater pieces such as `sparkle`
 
-`install.sh` extracts the DMG, swaps in a Linux Electron runtime, rebuilds native modules such as `node-pty` and `better-sqlite3`, removes macOS-only pieces, and creates a Linux launcher.
+`install.sh` extracts the DMG, swaps in a Linux Electron runtime, rebuilds native modules such as `node-pty` and `better-sqlite3`, removes macOS-only pieces, creates a fallback Linux launcher, and then integrates the committed main-app Remote runtime unless you disable that step.
 
 `build-deb.sh` does not rebuild the app; it simply packages the current `codex-app/` tree together with the desktop launcher assets from `packaging/deb/`.
 

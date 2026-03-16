@@ -39,19 +39,14 @@ def copy_tree(src: Path, dst: Path) -> None:
             shutil.copy2(path, target)
 
 
-def copy_live_webview_tree(src: Path, dst: Path) -> None:
+def sync_live_webview_tree(src: Path, dst: Path) -> None:
     webview_src = src / 'webview'
     if not webview_src.is_dir():
         return
 
-    for path in webview_src.rglob('*'):
-        rel = path.relative_to(webview_src)
-        target = dst / rel
-        if path.is_dir():
-            target.mkdir(parents=True, exist_ok=True)
-        else:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(path, target)
+    if dst.exists():
+        shutil.rmtree(dst)
+    shutil.copytree(webview_src, dst)
 
 
 def apply_replacements(root: Path, rules: list, *, glob_prefix: Optional[str] = None) -> None:
@@ -71,12 +66,13 @@ def apply_replacements(root: Path, rules: list, *, glob_prefix: Optional[str] = 
         already_present = False
         for path in matched_files:
             text = path.read_text(encoding='utf-8')
+            if rule.get('already_contains') and rule['already_contains'] in text:
+                already_present = True
+                continue
             if rule['find'] in text:
                 total_replacements += text.count(rule['find'])
                 text = text.replace(rule['find'], rule['replace'])
                 path.write_text(text, encoding='utf-8')
-            elif rule.get('already_contains') and rule['already_contains'] in text:
-                already_present = True
 
         expected = rule.get('count')
         if total_replacements == 0:
@@ -117,12 +113,10 @@ def main() -> int:
     for item in manifest.get('copy_tree', []):
         src = bundle_dir / item['from']
         copy_tree(src, extract_dir / item['to'])
-        if live_webview_dir.is_dir():
-            copy_live_webview_tree(src, live_webview_dir)
 
     apply_replacements(extract_dir, manifest.get('replacements', []))
     if live_webview_dir.is_dir():
-        apply_replacements(live_webview_dir, manifest.get('replacements', []), glob_prefix='webview')
+        sync_live_webview_tree(extract_dir, live_webview_dir)
 
     packed_dir.mkdir(parents=True, exist_ok=True)
     run([

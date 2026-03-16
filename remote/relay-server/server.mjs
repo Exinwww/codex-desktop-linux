@@ -28,6 +28,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WORKSPACE_ROOT = path.resolve(__dirname, '..', '..');
 const EXTRACTED_WEBVIEW_ROOT = path.join(WORKSPACE_ROOT, 'patch-work', 'local', 'extract', 'webview');
 const SANDBOX_WEBVIEW_ROOT = path.join(WORKSPACE_ROOT, '.sandbox', 'codex-app', 'content', 'webview');
+const MAIN_APP_WEBVIEW_ROOT = path.join(WORKSPACE_ROOT, 'content', 'webview');
 const RELAY_PORT = Number.parseInt(process.env.CODEX_REMOTE_RELAY_PORT ?? `${DEFAULT_RELAY_PORT}`, 10);
 const RELAY_HOST = process.env.CODEX_REMOTE_RELAY_HOST ?? '127.0.0.1';
 const RENDEZVOUS_ORIGIN = process.env.CODEX_REMOTE_RENDEZVOUS_ORIGIN
@@ -129,7 +130,7 @@ function lookupContentType(filePath) {
 }
 
 async function resolveWebviewRoot() {
-  for (const candidate of [process.env.CODEX_REMOTE_WEBVIEW_SOURCE, SANDBOX_WEBVIEW_ROOT, EXTRACTED_WEBVIEW_ROOT]) {
+  for (const candidate of [process.env.CODEX_REMOTE_WEBVIEW_SOURCE, MAIN_APP_WEBVIEW_ROOT, SANDBOX_WEBVIEW_ROOT, EXTRACTED_WEBVIEW_ROOT]) {
     if (!candidate) {
       continue;
     }

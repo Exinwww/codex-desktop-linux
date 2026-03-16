@@ -89,6 +89,11 @@ EOF
 command -v dpkg-deb >/dev/null 2>&1 || error "dpkg-deb is required"
 command -v install >/dev/null 2>&1 || error "install is required"
 
+APPLY_MAIN_REMOTE_INTEGRATION="${APPLY_MAIN_REMOTE_INTEGRATION:-1}"
+if [ "$APPLY_MAIN_REMOTE_INTEGRATION" = "1" ]; then
+    "$SCRIPT_DIR/scripts/main-repatch.sh" "$APP_DIR"
+fi
+
 if [ -z "$ICON_SOURCE" ]; then
     ICON_SOURCE="$(find "$APP_DIR/content/webview/assets" -maxdepth 1 -type f -name 'app-*.png' | head -1 || true)"
 fi

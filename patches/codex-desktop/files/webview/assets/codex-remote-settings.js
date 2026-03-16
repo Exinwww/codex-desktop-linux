@@ -18,8 +18,8 @@ const helperTextClassName = "text-xs text-token-text-tertiary";
 const saveButtonClassName = "rounded-md bg-token-text-primary px-3 py-2 text-sm font-medium text-token-bg-primary transition disabled:cursor-not-allowed disabled:opacity-50";
 
 const remoteToggleOptions = [
-  { id: "enabled", label: "Enabled", ariaLabel: "Enable sandbox remote relay" },
-  { id: "disabled", label: "Disabled", ariaLabel: "Disable sandbox remote relay" },
+  { id: "enabled", label: "Enabled", ariaLabel: "Enable remote relay" },
+  { id: "disabled", label: "Disabled", ariaLabel: "Disable remote relay" },
 ];
 
 const modeOptions = [
@@ -38,7 +38,7 @@ function getDefaultState() {
     mode: "localhost",
     relayOrigin: "http://127.0.0.1:9001",
     rendezvousOrigin: "http://127.0.0.1:9002",
-    deviceId: "sandbox-local",
+    deviceId: "local-device",
     hostToken: "",
     pairingCode: "",
     connectUrl: "",
@@ -61,7 +61,7 @@ function describeStatus(state) {
     return state.mode === "localhost" ? "Relay + host agent running" : "Host agent running";
   }
 
-  return state.enabled ? "Waiting for sandbox" : "Stopped";
+  return state.enabled ? "Starting remote services" : "Stopped";
 }
 
 async function requestRemoteState(init) {
@@ -75,7 +75,7 @@ async function requestRemoteState(init) {
   });
 
   if (response.status === 404) {
-    const error = new Error("Sandbox remote controls are not available in this session.");
+    const error = new Error("Remote controls are not available in this session.");
     error.code = "unsupported";
     throw error;
   }
@@ -150,7 +150,7 @@ function RemoteSettings() {
       saving: false,
       dirty: false,
       running: false,
-      error: "This panel is only available in sandbox sessions started with ./scripts/sandbox-run.sh.",
+      error: "This panel is only available when the app is launched through the managed local webview server.",
     }));
   }, []);
 
@@ -252,7 +252,7 @@ function RemoteSettings() {
     children: [
       jsx(SettingsGroup.Header, {
         title: "Remote relay",
-        subtitle: "Configure how this sandboxed Codex app exposes itself for remote browser access.",
+        subtitle: "Configure how this Codex app exposes itself for remote browser access.",
       }),
       jsx(SettingsGroup.Content, {
         children: jsxs("div", {

@@ -3,6 +3,11 @@ set -eu
 
 APP_DIR="/opt/codex-desktop"
 
+CONFIG_ROOT="${XDG_CONFIG_HOME:-${HOME:-}/.config}"
+if [ -z "${CODEX_APP_USER_DATA_DIR:-}" ]; then
+    export CODEX_APP_USER_DATA_DIR="$CONFIG_ROOT/codex-desktop"
+fi
+
 find_codex_cli() {
     if [ -n "${CODEX_CLI_PATH:-}" ] && [ -x "${CODEX_CLI_PATH}" ]; then
         printf '%s\n' "${CODEX_CLI_PATH}"
